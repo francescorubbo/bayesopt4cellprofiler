@@ -28,13 +28,10 @@ import skimage.util
 #
 #################################
 
-import cellprofiler.image
-import cellprofiler.module
-import cellprofiler.measurement
-import cellprofiler.object
-import cellprofiler.setting
-import cellprofiler.pipeline
-import cellprofiler.workspace
+from cellprofiler_core.image import Image as CPImage
+from cellprofiler_core.module import Module as CPModule
+from cellprofiler_core.constants.measurement import CPCOLTYPE_FLOAT
+import cellprofiler_core.setting as cpsetting
 
 __doc__ = """\
 AutomatedEvaluation
@@ -96,7 +93,7 @@ COLOR_ORDER = ["Red", "Green", "Blue", "Yellow", "White", "Black"]
 #
 # Create module class which inherits from cellprofiler.module.Module class
 #
-class AutomatedEvaluation(cellprofiler.module.Module):
+class AutomatedEvaluation(CPModule):
 
     #
     # Declare the name for displaying the module, e.g. in menus 
@@ -134,9 +131,9 @@ class AutomatedEvaluation(cellprofiler.module.Module):
         # ImageNameSubscriber provides all available images in the image set
         # The image is needed to display the outlines of an object on the image to the user
         #
-        self.image_name = cellprofiler.setting.ImageNameSubscriber(
+        self.image_name = cpsetting.ImageNameSubscriber(
             "Select image on which to display outlines",
-            cellprofiler.setting.NONE,
+            cpsetting.NONE,
             doc="""\
         Choose the image to serve as the background for the outlines. You can
         choose from images that were loaded or created by modules previous to
@@ -147,7 +144,7 @@ class AutomatedEvaluation(cellprofiler.module.Module):
         #
         # Choose a mode for outlining the objects on the image
         #
-        self.line_mode = cellprofiler.setting.Choice(
+        self.line_mode = cpsetting.Choice(
             "How to outline",
             ["Inner", "Outer", "Thick"],
             value="Inner",
@@ -167,7 +164,7 @@ class AutomatedEvaluation(cellprofiler.module.Module):
         #
         # Provide a name for the created output image (which can be saved)
         #
-        self.output_image_name = cellprofiler.setting.ImageNameProvider(
+        self.output_image_name = cpsetting.ImageNameProvider(
             "Name the output image",
             "AutoEvaluationOverlay",
             doc="""\
@@ -176,13 +173,13 @@ class AutomatedEvaluation(cellprofiler.module.Module):
         """
         )
 
-        self.spacer = cellprofiler.setting.Divider(line=False)
+        self.spacer = cpsetting.Divider(line=False)
 
         #
         # The number of outlined objects;
         # necessary for prepare_settings method
         #
-        self.count1 = cellprofiler.setting.Integer(
+        self.count1 = cpsetting.Integer(
             'No. of objects to display',
             1,
             minval=1,
@@ -195,7 +192,7 @@ class AutomatedEvaluation(cellprofiler.module.Module):
         # The number of measurements for the object (first one in outlines);
         # necessary for prepare_settings method
         #
-        self.count2 = cellprofiler.setting.Integer(
+        self.count2 = cpsetting.Integer(
             'No. of measurements to consider for object',
             1,
             minval=1,
@@ -217,9 +214,9 @@ class AutomatedEvaluation(cellprofiler.module.Module):
         #
         # Button for adding additional outlines; calls add_outline helper function
         #
-        self.add_outline_button = cellprofiler.setting.DoSomething("", "Add another outline", self.add_outline)
+        self.add_outline_button = cpsetting.DoSomething("", "Add another outline", self.add_outline)
 
-        self.divider = cellprofiler.setting.Divider()
+        self.divider = cpsetting.Divider()
 
         #
         # Group of measurements made for the object by a Measurements module
@@ -234,7 +231,7 @@ class AutomatedEvaluation(cellprofiler.module.Module):
         #
         # Button for adding additional measurements; calls add_measurement helper function
         #
-        self.add_measurement_button = cellprofiler.setting.DoSomething(
+        self.add_measurement_button = cpsetting.DoSomething(
             "", "Add another measurement", self.add_measurement)
 
     #
@@ -244,9 +241,9 @@ class AutomatedEvaluation(cellprofiler.module.Module):
     #
 
     def add_outline(self, can_remove=True):
-        group = cellprofiler.setting.SettingsGroup()
+        group = cpsetting.SettingsGroup()
         if can_remove:
-            group.append("divider", cellprofiler.setting.Divider(line=False))
+            group.append("divider", cpsetting.Divider(line=False))
 
         #
         # Object to be outlined which was identified in upstream IndentifyObjects module;
@@ -254,9 +251,9 @@ class AutomatedEvaluation(cellprofiler.module.Module):
         #
         group.append(
             "objects_name",
-            cellprofiler.setting.ObjectNameSubscriber(
+            cpsetting.ObjectNameSubscriber(
                 "Select objects to display",
-                cellprofiler.setting.NONE,
+                cpsetting.NONE,
                 doc="Choose the objects whose outlines you would like to display. The first object chosen will be the "
                     "leading object, storing the quality measurement needed for the Bayesian Optimisation."
             )
@@ -269,7 +266,7 @@ class AutomatedEvaluation(cellprofiler.module.Module):
         #
         group.append(
             "color",
-            cellprofiler.setting.Color(
+            cpsetting.Color(
                 "Select outline color",
                 default_color,
                 doc="Objects will be outlined in this color."
@@ -279,7 +276,7 @@ class AutomatedEvaluation(cellprofiler.module.Module):
         if can_remove:
             group.append(
                 "remover",
-                cellprofiler.setting.RemoveSettingButton("", "Remove this outline", self.outlines, group)
+                cpsetting.RemoveSettingButton("", "Remove this outline", self.outlines, group)
             )
 
         self.outlines.append(group)
@@ -290,14 +287,14 @@ class AutomatedEvaluation(cellprofiler.module.Module):
     # adds a remove-button for all measurements except a mandatory one where can_delete = False
     #
     def add_measurement(self, can_delete=True):
-        group = cellprofiler.setting.SettingsGroup()
+        group = cpsetting.SettingsGroup()
 
         #
         # Dropdown selection for measurements taken for the object
         #
         group.append(
             "measurement",
-            cellprofiler.setting.Measurement(
+            cpsetting.Measurement(
                 "Select the quality measurement",
                 self.outlines[0].objects_name.get_value,
                 "AreaShape_Area",
@@ -313,7 +310,7 @@ on the features measured."""
         #
         group.append(
             "range",
-            cellprofiler.setting.FloatRange(
+            cpsetting.FloatRange(
                 'Set tolerance range',
                 (00.00, 100.00),
                 minval=00.00,
@@ -324,14 +321,14 @@ deviation will be calculated"""
             )
         )
 
-        group.append("divider", cellprofiler.setting.Divider())
+        group.append("divider", cpsetting.Divider())
 
         self.measurements.append(group)
 
         if can_delete:
             group.append(
                 "remover",
-                cellprofiler.setting.RemoveSettingButton(
+                cpsetting.RemoveSettingButton(
                     "",
                     "Remove this measurement",
                     self.measurements, group
@@ -449,7 +446,7 @@ deviation will be calculated"""
         #
         # create new output image with the object outlines
         #
-        output_image = cellprofiler.image.Image(pixel_data, dimensions=dimensions)
+        output_image = Image(pixel_data, dimensions=dimensions)
 
         #
         # add new image with object outlines to workspace image set
@@ -663,7 +660,7 @@ deviation will be calculated"""
 
         input_object_name = self.outlines[0].objects_name.value
 
-        return [input_object_name, FEATURE_NAME, cellprofiler.measurement.COLTYPE_FLOAT]
+        return [input_object_name, FEATURE_NAME, CPCOLTYPE_FLOAT]
 
     #
     # Return a list of the measurement categories produced by this module if the object_name matches

@@ -27,14 +27,10 @@ import skimage.util
 #
 #################################
 
-import cellprofiler.image
-import cellprofiler.module
-import cellprofiler.setting
-import cellprofiler.measurement
-import cellprofiler.object
-import cellprofiler.preferences
-import cellprofiler.gui
-import cellprofiler.gui.figure
+from cellprofiler_core.image import Image as CPImage
+from cellprofiler_core.module import Module as CPModule
+import cellprofiler_core.setting as cpsetting
+from cellprofiler_core.constants.measurement import CPCOLTYPE_FLOAT
 
 __doc__ = """\
 ManualEvaluation
@@ -105,7 +101,7 @@ COLOR_ORDER = ["Red", "Green", "Blue", "Yellow", "White", "Black"]
 #
 # Create module class which inherits from cellprofiler.module.Module class
 #
-class ManualEvaluation(cellprofiler.module.Module):
+class ManualEvaluation(CPModule):
 
     #
     # Declare the name for displaying the module, e.g. in menus 
@@ -139,7 +135,7 @@ class ManualEvaluation(cellprofiler.module.Module):
         #
         # Minimum quality threshold for the identification quality of an object
         #
-        self.accuracy_threshold = cellprofiler.setting.Integer(
+        self.accuracy_threshold = cpsetting.Integer(
             text="Set min quality threshold (1-10)",
             value=9,
             minval=1,
@@ -149,15 +145,15 @@ This is the quality threshold for the object identification quality evaluation.
         """
         )
 
-        self.divider = cellprofiler.setting.Divider()
+        self.divider = cpsetting.Divider()
 
         #
         # ImageNameSubscriber provides all available images in the image set
         # The image is needed to display the outlines of an object on the image to the user
         #
-        self.image_name = cellprofiler.setting.ImageNameSubscriber(
+        self.image_name = cpsetting.ImageNameSubscriber(
             "Select image on which to display outlines",
-            cellprofiler.setting.NONE,
+            cpsetting.NONE,
             doc="""\
 Choose the image to serve as the background for the outlines. You can
 choose from images that were loaded or created by modules previous to
@@ -168,7 +164,7 @@ this one.
         #
         # Choose a mode for outlining the objects on the image
         #
-        self.line_mode = cellprofiler.setting.Choice(
+        self.line_mode = cpsetting.Choice(
             "How to outline",
             ["Inner", "Outer", "Thick"],
             value="Inner",
@@ -188,7 +184,7 @@ Specify how to mark the boundaries around an object:
         #
         # Provide a name for the created output image (which can be saved)
         #
-        self.output_image_name = cellprofiler.setting.ImageNameProvider(
+        self.output_image_name = cpsetting.ImageNameProvider(
             "Name the output image",
             "EvaluationOverlay",
             doc="""\
@@ -197,7 +193,7 @@ image can be selected in later modules (for instance, **SaveImages**).
 """
         )
 
-        self.spacer = cellprofiler.setting.Divider(line=False)
+        self.spacer = cpsetting.Divider(line=False)
 
         #
         # Group of outlines for different object that should be displayed on the image
@@ -212,7 +208,7 @@ image can be selected in later modules (for instance, **SaveImages**).
         #
         # Button for adding additional outlines; calls add_outline helper function
         #
-        self.add_outline_button = cellprofiler.setting.DoSomething("", "Add another outline", self.add_outline)
+        self.add_outline_button = cpsetting.DoSomething("", "Add another outline", self.add_outline)
 
     #
     # helper function:
@@ -220,9 +216,9 @@ image can be selected in later modules (for instance, **SaveImages**).
     # add a remove-button for all outlines except a mandatory one
     #
     def add_outline(self, can_remove=True):
-        group = cellprofiler.setting.SettingsGroup()
+        group = cpsetting.SettingsGroup()
         if can_remove:
-            group.append("divider", cellprofiler.setting.Divider(line=False))
+            group.append("divider", cpsetting.Divider(line=False))
 
         #
         # Object to be outlined which was identified in upstream IndentifyObjects module;
@@ -230,9 +226,9 @@ image can be selected in later modules (for instance, **SaveImages**).
         #
         group.append(
             "objects_name",
-            cellprofiler.setting.ObjectNameSubscriber(
+            cpsetting.ObjectNameSubscriber(
                 "Select objects to display",
-                cellprofiler.setting.NONE,
+                cpsetting.NONE,
                 doc="Choose the objects whose outlines you would like to display. The first object chosen will be the "
                     "leading object, storing the quality measurement needed for the Bayesian Optimisation."
             )
@@ -245,7 +241,7 @@ image can be selected in later modules (for instance, **SaveImages**).
         #
         group.append(
             "color",
-            cellprofiler.setting.Color(
+            cpsetting.Color(
                 "Select outline color",
                 default_color,
                 doc="Objects will be outlined in this color."
@@ -255,7 +251,7 @@ image can be selected in later modules (for instance, **SaveImages**).
         if can_remove:
             group.append(
                 "remover",
-                cellprofiler.setting.RemoveSettingButton("", "Remove this outline", self.outlines, group)
+                cpsetting.RemoveSettingButton("", "Remove this outline", self.outlines, group)
             )
 
         self.outlines.append(group)
@@ -327,7 +323,7 @@ image can be selected in later modules (for instance, **SaveImages**).
         #
         # create new output image with the object outlines
         #
-        output_image = cellprofiler.image.Image(pixel_data, dimensions=dimensions)
+        output_image = CPImage(pixel_data, dimensions=dimensions)
 
         #
         # add new image with object outlines to workspace image set
@@ -644,7 +640,7 @@ image can be selected in later modules (for instance, **SaveImages**).
 
         input_object_name = self.outlines[0].objects_name.value
 
-        return [input_object_name, FEATURE_NAME, cellprofiler.measurement.COLTYPE_FLOAT]
+        return [input_object_name, FEATURE_NAME, CPCOLTYPE_FLOAT]
 
     #
     # Return a list of the measurement categories produced by this module if the object_name matches

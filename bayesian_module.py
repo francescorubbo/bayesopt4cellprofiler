@@ -30,14 +30,9 @@ import os
 #
 #################################
 
-import cellprofiler.image
-import cellprofiler.module
-import cellprofiler.measurement
-import cellprofiler.object
-import cellprofiler.setting
-import cellprofiler.pipeline
-import cellprofiler.workspace
-import cellprofiler.preferences
+from cellprofiler_core.module import Module as CPModule
+import cellprofiler_core.setting as cpsetting
+import cellprofiler_core.preferences as cppreferences
 
 
 __doc__ = """\
@@ -100,7 +95,7 @@ np.set_printoptions(suppress=True)
 #
 # Create module class which inherits from cellprofiler.module.Module class
 #
-class BayesianOptimisation(cellprofiler.module.Module):
+class BayesianOptimisation(CPModule):
 
     #
     # Declare the name for displaying the module, e.g. in menus 
@@ -136,9 +131,9 @@ class BayesianOptimisation(cellprofiler.module.Module):
         #
         # Object identified in upstream IndentifyObjects module; accessible via ObjectNameSubscriber
         #
-        self.input_object_name = cellprofiler.setting.ObjectNameSubscriber(
+        self.input_object_name = cpsetting.ObjectNameSubscriber(
             "Input object name",
-            cellprofiler.setting.NONE,
+            cpsetting.NONE,
             doc="""\
 These are the objects that the module operates on."""
         )
@@ -147,7 +142,7 @@ These are the objects that the module operates on."""
         # The number of evaluation modules as input for BayesianModule;
         # necessary for prepare_settings method
         #
-        self.count1 = cellprofiler.setting.Integer(
+        self.count1 = cpsetting.Integer(
                 'No. of evaluation modules',
                 1,
                 minval=1,
@@ -160,7 +155,7 @@ No. of evaluation modules before BayesianModule."""
         # The number of parameters to be adjusted by BayesianModule;
         # necessary for prepare_settings method
         #
-        self.count2 = cellprofiler.setting.Integer(
+        self.count2 = cpsetting.Integer(
             'No. of settings to be adjusted',
             2,
             minval=1,
@@ -182,15 +177,15 @@ No. of settings that should be adjusted by BayesianModule. You can choose up to 
         #
         # Button for adding additional measurements; calls add_measurement helper function
         #
-        self.add_measurement_button = cellprofiler.setting.DoSomething(
+        self.add_measurement_button = cpsetting.DoSomething(
             "", "Add another measurement", self.add_measurement)
 
-        self.spacer = cellprofiler.setting.Divider(line=True)
+        self.spacer = cpsetting.Divider(line=True)
 
         #
         # The weighting in % for the automated evaluation results
         #
-        self.weighting_auto = cellprofiler.setting.Integer(
+        self.weighting_auto = cpsetting.Integer(
             'Weighting of automated evaluation score (%)',
             50,
             minval=0,
@@ -202,7 +197,7 @@ The weighting of the automated evaluation results in comparison to manual evalua
         #
         # The weighting in % for the manual evaluation results
         #
-        self.weighting_manual = cellprofiler.setting.Integer(
+        self.weighting_manual = cpsetting.Integer(
             'Weighting of manual evaluation score (%)',
             50,
             minval=0,
@@ -212,12 +207,12 @@ The weighting of the manual evaluation result in comparison to automated evaluat
         )
 
 
-        self.spacer6 = cellprofiler.setting.Divider(line=True)
+        self.spacer6 = cpsetting.Divider(line=True)
 
         #
         # The maximum number of iterations for the Bayesian Optimisation
         #
-        self.max_iter = cellprofiler.setting.Integer(
+        self.max_iter = cpsetting.Integer(
             'Max. iterations for Bayesian Optimisation',
             150,
             minval=2,
@@ -230,7 +225,7 @@ recommended iterations are 50 - 200, depending on the problem to be solved. """
         #
         # The length scale for the Bayesian Optimisation kernel function
         #
-        self.length_scale = cellprofiler.setting.Float(
+        self.length_scale = cpsetting.Float(
             'Length scale for Bayesian Optimisation kernel function',
             0.1,
             minval=0,
@@ -243,7 +238,7 @@ smoothness of the objective kernel function. A larger value indicates a smoother
         #
         # The alpha value for the Bayesian Optimisation model
         #
-        self.alpha = cellprofiler.setting.Float(
+        self.alpha = cpsetting.Float(
             'Alpha for Bayesian Optimisation model',
             0.01,
             minval=0,
@@ -252,7 +247,7 @@ smoothness of the objective kernel function. A larger value indicates a smoother
 Define the alpha value for the GaussianProcessRegressor model. A low value indicates low noise in the data."""
         )
 
-        self.spacer4 = cellprofiler.setting.Divider(line=True)
+        self.spacer4 = cpsetting.Divider(line=True)
 
         self.parameters = []
 
@@ -264,16 +259,16 @@ Define the alpha value for the GaussianProcessRegressor model. A low value indic
         #
         # Button for adding additional parameters; calls add_parameter helper function
         #
-        self.add_param_button = cellprofiler.setting.DoSomething("", "Add parameter", self.add_parameter)
+        self.add_param_button = cpsetting.DoSomething("", "Add parameter", self.add_parameter)
 
-        self.spacer2 = cellprofiler.setting.Divider(line=True)
+        self.spacer2 = cpsetting.Divider(line=True)
 
         #
         # Button for refreshing the GUI; calls refreshGUI helper function
         # This is necessary as the choices_fn function does not work without
         # refreshing the GUI if new groups were added
         #
-        self.refresh_button = cellprofiler.setting.DoSomething(
+        self.refresh_button = cpsetting.DoSomething(
             "",
             "Refresh GUI",
             self.refreshGUI,
@@ -281,30 +276,30 @@ Define the alpha value for the GaussianProcessRegressor model. A low value indic
 If the dropdown menus are not updated, you can update them again with this button."""
         )
 
-        self.spacer3 = cellprofiler.setting.Divider(line=True)
+        self.spacer3 = cpsetting.Divider(line=True)
 
         #
         # Output directory chooser;
         # x and y values of previous Optimisation rounds will be saved in files in this directory
         #
-        self.pathname = cellprofiler.setting.DirectoryPath(
+        self.pathname = cpsetting.DirectoryPath(
             "Output file location",
             dir_choices=[
-                cellprofiler.preferences.DEFAULT_OUTPUT_FOLDER_NAME,
-                cellprofiler.preferences.DEFAULT_INPUT_FOLDER_NAME,
-                cellprofiler.preferences.ABSOLUTE_FOLDER_NAME,
-                cellprofiler.preferences.DEFAULT_OUTPUT_SUBFOLDER_NAME,
-                cellprofiler.preferences.DEFAULT_INPUT_SUBFOLDER_NAME],
+                cppreferences.DEFAULT_OUTPUT_FOLDER_NAME,
+                cppreferences.DEFAULT_INPUT_FOLDER_NAME,
+                cppreferences.ABSOLUTE_FOLDER_NAME,
+                cppreferences.DEFAULT_OUTPUT_SUBFOLDER_NAME,
+                cppreferences.DEFAULT_INPUT_SUBFOLDER_NAME],
             doc="""\
 Choose the directory where Optimisation data is saved. """
         )
 
-        self.spacer5 = cellprofiler.setting.Divider(line=False)
+        self.spacer5 = cpsetting.Divider(line=False)
 
         #
         # Button for deleting existing files storing values from previous runs
         #
-        self.delete_button = cellprofiler.setting.DoSomething(
+        self.delete_button = cpsetting.DoSomething(
             "",
             "Delete previous Data",
             self.delete_data,
@@ -318,14 +313,14 @@ If there is previously gathered data saved in a file you can choose to delete it
     # add a remove-button for all measurements except a mandatory one
     #
     def add_measurement(self, can_delete=True):
-        group = cellprofiler.setting.SettingsGroup()
+        group = cpsetting.SettingsGroup()
 
         #
         # Dropdown selection for measurements taken for the object
         #
         group.append(
             "evaluation_measurement",
-            cellprofiler.setting.Measurement(
+            cpsetting.Measurement(
                 "Select measurements for evaluation",
                 self.input_object_name.get_value,
                 "Evaluation_Deviation",
@@ -341,7 +336,7 @@ features measured."""
         if can_delete:
             group.append(
                 "remover",
-                cellprofiler.setting.RemoveSettingButton(
+                cpsetting.RemoveSettingButton(
                     "",
                     "Remove this measurement",
                     self.measurements, group
@@ -355,15 +350,15 @@ features measured."""
     #
     def add_parameter(self, can_remove=True):
 
-        group = cellprofiler.setting.SettingsGroup()
+        group = cpsetting.SettingsGroup()
 
         if can_remove:
-            group.append("divider", cellprofiler.setting.Divider(line=False))
+            group.append("divider", cpsetting.Divider(line=False))
 
         #
         # Dropdown selection for modules (IdentifyObjects modules)
         #
-        group.append("module_names", cellprofiler.setting.Choice(
+        group.append("module_names", cpsetting.Choice(
             "Select module",
             choices=[""],
             choices_fn=self.get_module_list,
@@ -375,7 +370,7 @@ This is the module where Bayesian Optimisation will adjust settings
         #
         # Dropdown selection for parameters of the selected modules
         #
-        group.append("parameter_names", cellprofiler.setting.Choice(
+        group.append("parameter_names", cpsetting.Choice(
             "Select parameter",
             choices=[""],
             choices_fn=self.get_settings_from_modules,
@@ -389,7 +384,7 @@ These are the settings to be adjusted by Bayesian Optimisation
         #
         group.append(
             "range",
-            cellprofiler.setting.FloatRange(
+            cpsetting.FloatRange(
                 'Set min and max boundaries for variation',
                 (1.00, 100.00),
                 minval=00.00,
@@ -405,7 +400,7 @@ bound is inclusive, the upper bound is exclusive."""
         #
         group.append(
             "steps",
-            cellprofiler.setting.Float(
+            cpsetting.Float(
                 'Set steps between boundaries',
                 0.1,
                 minval=00.00,
@@ -417,7 +412,7 @@ The variation steps within the chosen range for choosing a candidate set."""
 
         if can_remove:
             group.append("remover",
-                         cellprofiler.setting.RemoveSettingButton("", "Remove parameter", self.parameters, group))
+                         cpsetting.RemoveSettingButton("", "Remove parameter", self.parameters, group))
 
         self.parameters.append(group)
 
