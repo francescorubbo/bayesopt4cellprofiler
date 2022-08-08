@@ -30,7 +30,7 @@ import skimage.util
 
 from cellprofiler_core.image import Image as CPImage
 from cellprofiler_core.module import Module as CPModule
-from cellprofiler_core.constants.measurement import CPCOLTYPE_FLOAT
+from cellprofiler_core.constants.measurement import COLTYPE_FLOAT as CPCOLTYPE_FLOAT
 import cellprofiler_core.setting as cpsetting
 
 __doc__ = """\
@@ -131,9 +131,9 @@ class AutomatedEvaluation(CPModule):
         # ImageNameSubscriber provides all available images in the image set
         # The image is needed to display the outlines of an object on the image to the user
         #
-        self.image_name = cpsetting.ImageNameSubscriber(
+        self.image_name = cpsetting.subscriber.ImageSubscriber(
             "Select image on which to display outlines",
-            cpsetting.NONE,
+            "None",
             doc="""\
         Choose the image to serve as the background for the outlines. You can
         choose from images that were loaded or created by modules previous to
@@ -144,7 +144,7 @@ class AutomatedEvaluation(CPModule):
         #
         # Choose a mode for outlining the objects on the image
         #
-        self.line_mode = cpsetting.Choice(
+        self.line_mode = cpsetting.choice.Choice(
             "How to outline",
             ["Inner", "Outer", "Thick"],
             value="Inner",
@@ -164,7 +164,7 @@ class AutomatedEvaluation(CPModule):
         #
         # Provide a name for the created output image (which can be saved)
         #
-        self.output_image_name = cpsetting.ImageNameProvider(
+        self.output_image_name = cpsetting.text.ImageName(
             "Name the output image",
             "AutoEvaluationOverlay",
             doc="""\
@@ -179,7 +179,7 @@ class AutomatedEvaluation(CPModule):
         # The number of outlined objects;
         # necessary for prepare_settings method
         #
-        self.count1 = cpsetting.Integer(
+        self.count1 = cpsetting.text.Integer(
             'No. of objects to display',
             1,
             minval=1,
@@ -192,7 +192,7 @@ class AutomatedEvaluation(CPModule):
         # The number of measurements for the object (first one in outlines);
         # necessary for prepare_settings method
         #
-        self.count2 = cpsetting.Integer(
+        self.count2 = cpsetting.text.Integer(
             'No. of measurements to consider for object',
             1,
             minval=1,
@@ -214,7 +214,7 @@ class AutomatedEvaluation(CPModule):
         #
         # Button for adding additional outlines; calls add_outline helper function
         #
-        self.add_outline_button = cpsetting.DoSomething("", "Add another outline", self.add_outline)
+        self.add_outline_button = cpsetting.do_something.DoSomething("", "Add another outline", self.add_outline)
 
         self.divider = cpsetting.Divider()
 
@@ -231,7 +231,7 @@ class AutomatedEvaluation(CPModule):
         #
         # Button for adding additional measurements; calls add_measurement helper function
         #
-        self.add_measurement_button = cpsetting.DoSomething(
+        self.add_measurement_button = cpsetting.do_something.DoSomething(
             "", "Add another measurement", self.add_measurement)
 
     #
@@ -251,9 +251,9 @@ class AutomatedEvaluation(CPModule):
         #
         group.append(
             "objects_name",
-            cpsetting.ObjectNameSubscriber(
+            cpsetting.subscriber.LabelSubscriber(
                 "Select objects to display",
-                cpsetting.NONE,
+                "None",
                 doc="Choose the objects whose outlines you would like to display. The first object chosen will be the "
                     "leading object, storing the quality measurement needed for the Bayesian Optimisation."
             )
@@ -310,7 +310,7 @@ on the features measured."""
         #
         group.append(
             "range",
-            cpsetting.FloatRange(
+            cpsetting.range.FloatRange(
                 'Set tolerance range',
                 (00.00, 100.00),
                 minval=00.00,

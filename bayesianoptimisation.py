@@ -131,9 +131,9 @@ class BayesianOptimisation(CPModule):
         #
         # Object identified in upstream IndentifyObjects module; accessible via ObjectNameSubscriber
         #
-        self.input_object_name = cpsetting.ObjectNameSubscriber(
+        self.input_object_name = cpsetting.subscriber.LabelSubscriber(
             "Input object name",
-            cpsetting.NONE,
+            "None",
             doc="""\
 These are the objects that the module operates on."""
         )
@@ -142,7 +142,7 @@ These are the objects that the module operates on."""
         # The number of evaluation modules as input for BayesianModule;
         # necessary for prepare_settings method
         #
-        self.count1 = cpsetting.Integer(
+        self.count1 = cpsetting.text.Integer(
                 'No. of evaluation modules',
                 1,
                 minval=1,
@@ -155,7 +155,7 @@ No. of evaluation modules before BayesianModule."""
         # The number of parameters to be adjusted by BayesianModule;
         # necessary for prepare_settings method
         #
-        self.count2 = cpsetting.Integer(
+        self.count2 = cpsetting.text.Integer(
             'No. of settings to be adjusted',
             2,
             minval=1,
@@ -177,7 +177,7 @@ No. of settings that should be adjusted by BayesianModule. You can choose up to 
         #
         # Button for adding additional measurements; calls add_measurement helper function
         #
-        self.add_measurement_button = cpsetting.DoSomething(
+        self.add_measurement_button = cpsetting.do_something.DoSomething(
             "", "Add another measurement", self.add_measurement)
 
         self.spacer = cpsetting.Divider(line=True)
@@ -185,7 +185,7 @@ No. of settings that should be adjusted by BayesianModule. You can choose up to 
         #
         # The weighting in % for the automated evaluation results
         #
-        self.weighting_auto = cpsetting.Integer(
+        self.weighting_auto = cpsetting.text.Integer(
             'Weighting of automated evaluation score (%)',
             50,
             minval=0,
@@ -197,7 +197,7 @@ The weighting of the automated evaluation results in comparison to manual evalua
         #
         # The weighting in % for the manual evaluation results
         #
-        self.weighting_manual = cpsetting.Integer(
+        self.weighting_manual = cpsetting.text.Integer(
             'Weighting of manual evaluation score (%)',
             50,
             minval=0,
@@ -212,7 +212,7 @@ The weighting of the manual evaluation result in comparison to automated evaluat
         #
         # The maximum number of iterations for the Bayesian Optimisation
         #
-        self.max_iter = cpsetting.Integer(
+        self.max_iter = cpsetting.text.Integer(
             'Max. iterations for Bayesian Optimisation',
             150,
             minval=2,
@@ -225,7 +225,7 @@ recommended iterations are 50 - 200, depending on the problem to be solved. """
         #
         # The length scale for the Bayesian Optimisation kernel function
         #
-        self.length_scale = cpsetting.Float(
+        self.length_scale = cpsetting.text.Float(
             'Length scale for Bayesian Optimisation kernel function',
             0.1,
             minval=0,
@@ -238,7 +238,7 @@ smoothness of the objective kernel function. A larger value indicates a smoother
         #
         # The alpha value for the Bayesian Optimisation model
         #
-        self.alpha = cpsetting.Float(
+        self.alpha = cpsetting.text.Float(
             'Alpha for Bayesian Optimisation model',
             0.01,
             minval=0,
@@ -259,7 +259,7 @@ Define the alpha value for the GaussianProcessRegressor model. A low value indic
         #
         # Button for adding additional parameters; calls add_parameter helper function
         #
-        self.add_param_button = cpsetting.DoSomething("", "Add parameter", self.add_parameter)
+        self.add_param_button = cpsetting.do_something.DoSomething("", "Add parameter", self.add_parameter)
 
         self.spacer2 = cpsetting.Divider(line=True)
 
@@ -268,7 +268,7 @@ Define the alpha value for the GaussianProcessRegressor model. A low value indic
         # This is necessary as the choices_fn function does not work without
         # refreshing the GUI if new groups were added
         #
-        self.refresh_button = cpsetting.DoSomething(
+        self.refresh_button = cpsetting.do_something.DoSomething(
             "",
             "Refresh GUI",
             self.refreshGUI,
@@ -282,7 +282,7 @@ If the dropdown menus are not updated, you can update them again with this butto
         # Output directory chooser;
         # x and y values of previous Optimisation rounds will be saved in files in this directory
         #
-        self.pathname = cpsetting.DirectoryPath(
+        self.pathname = cpsetting.text.Directory(
             "Output file location",
             dir_choices=[
                 cppreferences.DEFAULT_OUTPUT_FOLDER_NAME,
@@ -299,7 +299,7 @@ Choose the directory where Optimisation data is saved. """
         #
         # Button for deleting existing files storing values from previous runs
         #
-        self.delete_button = cpsetting.DoSomething(
+        self.delete_button = cpsetting.do_something.DoSomething(
             "",
             "Delete previous Data",
             self.delete_data,
@@ -358,7 +358,7 @@ features measured."""
         #
         # Dropdown selection for modules (IdentifyObjects modules)
         #
-        group.append("module_names", cpsetting.Choice(
+        group.append("module_names", cpsetting.choice.Choice(
             "Select module",
             choices=[""],
             choices_fn=self.get_module_list,
@@ -370,7 +370,7 @@ This is the module where Bayesian Optimisation will adjust settings
         #
         # Dropdown selection for parameters of the selected modules
         #
-        group.append("parameter_names", cpsetting.Choice(
+        group.append("parameter_names", cpsetting.choice.Choice(
             "Select parameter",
             choices=[""],
             choices_fn=self.get_settings_from_modules,
@@ -384,7 +384,7 @@ These are the settings to be adjusted by Bayesian Optimisation
         #
         group.append(
             "range",
-            cpsetting.FloatRange(
+            cpsetting.range.FloatRange(
                 'Set min and max boundaries for variation',
                 (1.00, 100.00),
                 minval=00.00,
@@ -400,7 +400,7 @@ bound is inclusive, the upper bound is exclusive."""
         #
         group.append(
             "steps",
-            cpsetting.Float(
+            cpsetting.text.Float(
                 'Set steps between boundaries',
                 0.1,
                 minval=00.00,

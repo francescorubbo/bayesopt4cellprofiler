@@ -30,7 +30,7 @@ import skimage.util
 from cellprofiler_core.image import Image as CPImage
 from cellprofiler_core.module import Module as CPModule
 import cellprofiler_core.setting as cpsetting
-from cellprofiler_core.constants.measurement import CPCOLTYPE_FLOAT
+from cellprofiler_core.constants.measurement import COLTYPE_FLOAT as CPCOLTYPE_FLOAT
 
 __doc__ = """\
 ManualEvaluation
@@ -135,7 +135,7 @@ class ManualEvaluation(CPModule):
         #
         # Minimum quality threshold for the identification quality of an object
         #
-        self.accuracy_threshold = cpsetting.Integer(
+        self.accuracy_threshold = cpsetting.text.Integer(
             text="Set min quality threshold (1-10)",
             value=9,
             minval=1,
@@ -151,9 +151,9 @@ This is the quality threshold for the object identification quality evaluation.
         # ImageNameSubscriber provides all available images in the image set
         # The image is needed to display the outlines of an object on the image to the user
         #
-        self.image_name = cpsetting.ImageNameSubscriber(
+        self.image_name = cpsetting.subscriber.ImageSubscriber(
             "Select image on which to display outlines",
-            cpsetting.NONE,
+            "None",
             doc="""\
 Choose the image to serve as the background for the outlines. You can
 choose from images that were loaded or created by modules previous to
@@ -164,7 +164,7 @@ this one.
         #
         # Choose a mode for outlining the objects on the image
         #
-        self.line_mode = cpsetting.Choice(
+        self.line_mode = cpsetting.choice.Choice(
             "How to outline",
             ["Inner", "Outer", "Thick"],
             value="Inner",
@@ -184,7 +184,7 @@ Specify how to mark the boundaries around an object:
         #
         # Provide a name for the created output image (which can be saved)
         #
-        self.output_image_name = cpsetting.ImageNameProvider(
+        self.output_image_name = cpsetting.text.ImageName(
             "Name the output image",
             "EvaluationOverlay",
             doc="""\
@@ -208,7 +208,7 @@ image can be selected in later modules (for instance, **SaveImages**).
         #
         # Button for adding additional outlines; calls add_outline helper function
         #
-        self.add_outline_button = cpsetting.DoSomething("", "Add another outline", self.add_outline)
+        self.add_outline_button = cpsetting.do_something.DoSomething("", "Add another outline", self.add_outline)
 
     #
     # helper function:
@@ -226,9 +226,9 @@ image can be selected in later modules (for instance, **SaveImages**).
         #
         group.append(
             "objects_name",
-            cpsetting.ObjectNameSubscriber(
+            cpsetting.subscriber.LabelSubscriber(
                 "Select objects to display",
-                cpsetting.NONE,
+                "None",
                 doc="Choose the objects whose outlines you would like to display. The first object chosen will be the "
                     "leading object, storing the quality measurement needed for the Bayesian Optimisation."
             )
